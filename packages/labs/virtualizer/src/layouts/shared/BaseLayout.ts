@@ -18,6 +18,7 @@ import {
   ScrollToCoordinates,
   BaseLayoutConfig,
   LayoutState,
+  LayoutStateSink,
 } from './Layout.js';
 
 type UpdateVisibleIndicesOptions = {
@@ -155,13 +156,19 @@ export abstract class BaseLayout<C extends BaseLayoutConfig> implements Layout {
 
   private _eventTarget: EventTarget | null = null;
 
+  private _layoutStateSink: LayoutStateSink;
+
   protected get _defaultConfig(): C {
     return {
       direction: 'vertical',
     } as C;
   }
 
-  constructor(config?: C) {
+  constructor(
+    config: C | undefined = undefined,
+    layoutStateSink: LayoutStateSink
+  ) {
+    this._layoutStateSink = layoutStateSink;
     // Delay setting config so that subclasses do setup work first
     Promise.resolve().then(() => (this.config = config || this._defaultConfig));
   }
@@ -486,7 +493,8 @@ export abstract class BaseLayout<C extends BaseLayoutConfig> implements Layout {
       } as Positions;
       this._scrollError = 0;
     }
-    this.dispatchEvent(new CustomEvent('statechange', {detail}));
+    // this.dispatchEvent(new CustomEvent('statechange', {detail}));
+    this._layoutStateSink(detail);
   }
 
   // protected _emitRange() {

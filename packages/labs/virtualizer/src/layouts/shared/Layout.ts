@@ -55,6 +55,8 @@ export interface LayoutState {
   scrollError?: Positions;
 }
 
+export type LayoutStateSink = (state: LayoutState) => void;
+
 export type ChildPositions = Map<number, Positions>;
 
 export type ChildMeasurements = {[key: number]: ItemBox};
@@ -66,7 +68,10 @@ export interface PinOptions {
   block?: ScrollLogicalPosition;
 }
 
-export type LayoutConstructor = new (config?: object) => Layout;
+export type LayoutConstructor = new (
+  config: object | undefined,
+  state: LayoutStateSink
+) => Layout;
 
 export interface LayoutSpecifier {
   type: LayoutConstructor;

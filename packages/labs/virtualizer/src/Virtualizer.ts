@@ -14,6 +14,7 @@ import {
   Layout,
   LayoutConstructor,
   LayoutSpecifier,
+  LayoutState,
   Size,
   InternalRange,
   MeasureChildFunction,
@@ -396,7 +397,9 @@ export class Virtualizer {
         .FlowLayout as unknown as LayoutConstructor;
     }
 
-    this._layout = new Ctor(config);
+    this._layout = new Ctor(config, (state: LayoutState) =>
+      this._updateDOM(state)
+    );
 
     if (
       this._layout.measureChildren &&
@@ -407,7 +410,7 @@ export class Virtualizer {
       }
       this._measureCallback = this._layout.updateItemSizes.bind(this._layout);
     }
-    this._layout.addEventListener('statechange', this);
+    // this._layout.addEventListener('statechange', this);
     // this._layout.addEventListener('scrollsizechange', this);
     // this._layout.addEventListener('scrollerrorchange', this);
     // this._layout.addEventListener('itempositionchange', this);
@@ -481,7 +484,11 @@ export class Virtualizer {
     }
   }
 
-  async _updateDOM() {
+  async _updateDOM(state: LayoutState) {
+    this._scrollSize = state.scrollSize;
+    this._adjustRange(state.range);
+    this._childrenPos = state.childPositions;
+    this._scrollError = state.scrollError || null;
     const {_rangeChanged, _itemsChanged} = this;
     if (this._visibilityChanged) {
       this._notifyVisibility();
