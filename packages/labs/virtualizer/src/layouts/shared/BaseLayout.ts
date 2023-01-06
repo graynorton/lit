@@ -13,7 +13,6 @@ import {
   Size,
   dimension,
   position,
-  // InternalRange,
   PinOptions,
   ScrollToCoordinates,
   BaseLayoutConfig,
@@ -154,8 +153,9 @@ export abstract class BaseLayout<C extends BaseLayoutConfig> implements Layout {
   // on viewport size, item size, other factors, possibly still with a dial of some kind
   protected _overhang = 1000;
 
-  // private _eventTarget: EventTarget | null = null;
-
+  /**
+   * Call this to deliver messages (e.g. stateChanged, unpinned) to host
+   */
   private _hostSink: LayoutHostSink;
 
   protected get _defaultConfig(): C {
@@ -287,29 +287,6 @@ export abstract class BaseLayout<C extends BaseLayoutConfig> implements Layout {
     }
   }
 
-  // async dispatchEvent(evt: Event) {
-  //   await this._eventTargetPromise;
-  //   this._eventTarget!.dispatchEvent(evt);
-  // }
-
-  // async addEventListener(
-  //   type: string,
-  //   listener: EventListener | EventListenerObject | null,
-  //   options?: boolean | AddEventListenerOptions | undefined
-  // ) {
-  //   await this._eventTargetPromise;
-  //   this._eventTarget!.addEventListener(type, listener, options);
-  // }
-
-  // async removeEventListener(
-  //   type: string,
-  //   callback: EventListener | EventListenerObject | null,
-  //   options?: boolean | EventListenerOptions | undefined
-  // ) {
-  //   await this._eventTargetPromise;
-  //   this._eventTarget!.removeEventListener(type, callback, options);
-  // }
-
   /**
    * Get the top and left positioning of the item at idx.
    */
@@ -384,10 +361,6 @@ export abstract class BaseLayout<C extends BaseLayoutConfig> implements Layout {
     this._getActiveItems();
     this._updateVisibleIndices();
     this._sendStateChangedMessage();
-    // this._emitScrollSize();
-    // this._emitRange();
-    // this._emitChildPositions();
-    // this._emitScrollError();
   }
 
   /**
@@ -496,49 +469,6 @@ export abstract class BaseLayout<C extends BaseLayoutConfig> implements Layout {
     this._hostSink(message);
   }
 
-  // protected _emitRange() {
-  //   const detail: InternalRange = {
-  //     first: this._first,
-  //     last: this._last,
-  //     firstVisible: this._firstVisible,
-  //     lastVisible: this._lastVisible,
-  //   };
-  //   this.dispatchEvent(new CustomEvent('rangechange', {detail}));
-  // }
-
-  // protected _emitScrollSize() {
-  //   const detail = {
-  //     [this._sizeDim]: this._scrollSize,
-  //     [this._secondarySizeDim]: null,
-  //   };
-  //   this.dispatchEvent(new CustomEvent('scrollsizechange', {detail}));
-  // }
-
-  // protected _emitScrollError() {
-  //   if (this._scrollError) {
-  //     const detail = {
-  //       [this._positionDim]: this._scrollError,
-  //       [this._secondaryPositionDim]: 0,
-  //     };
-  //     this.dispatchEvent(new CustomEvent('scrollerrorchange', {detail}));
-  //     this._scrollError = 0;
-  //   }
-  // }
-
-  // /**
-  //  * Get or estimate the top and left positions of items in the current range.
-  //  * Emit an itempositionchange event with these positions.
-  //  */
-  // protected _emitChildPositions() {
-  //   if (this._first !== -1 && this._last !== -1) {
-  //     const detail: ChildPositions = new Map();
-  //     for (let idx = this._first; idx <= this._last; idx++) {
-  //       detail.set(idx, this._getItemPosition(idx));
-  //     }
-  //     this.dispatchEvent(new CustomEvent('itempositionchange', {detail}));
-  //   }
-  // }
-
   /**
    * Number of items to display.
    */
@@ -598,7 +528,6 @@ export abstract class BaseLayout<C extends BaseLayoutConfig> implements Layout {
       this._firstVisible = firstVisible;
       this._lastVisible = lastVisible;
       if (options && options.emit) {
-        // this._emitRange();
         this._sendStateChangedMessage();
       }
     }

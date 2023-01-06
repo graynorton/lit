@@ -124,10 +124,6 @@ export interface Layout {
 
   updateItemSizes?: (sizes: ChildMeasurements) => void;
 
-  // addEventListener: Function;
-
-  // removeEventListener: Function;
-
   pin: PinOptions | null;
 
   unpin: Function;
