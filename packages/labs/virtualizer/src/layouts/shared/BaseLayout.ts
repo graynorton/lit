@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-import EventTarget from '../../polyfillLoaders/EventTarget.js';
+// import EventTarget from '../../polyfillLoaders/EventTarget.js';
 import {
   Layout,
   ChildPositions,
@@ -17,8 +17,8 @@ import {
   PinOptions,
   ScrollToCoordinates,
   BaseLayoutConfig,
-  LayoutState,
-  LayoutStateSink,
+  StateChangedMessage,
+  LayoutHostSink,
 } from './Layout.js';
 
 type UpdateVisibleIndicesOptions = {
@@ -80,9 +80,9 @@ export abstract class BaseLayout<C extends BaseLayoutConfig> implements Layout {
    */
   protected _lastVisible = 0;
 
-  private _eventTargetPromise: Promise<void> = EventTarget().then((Ctor) => {
-    this._eventTarget = new Ctor();
-  });
+  // private _eventTargetPromise: Promise<void> = EventTarget().then((Ctor) => {
+  //   this._eventTarget = new Ctor();
+  // });
 
   /**
    * Pixel offset in the scroll direction of the first child.
@@ -154,9 +154,9 @@ export abstract class BaseLayout<C extends BaseLayoutConfig> implements Layout {
   // on viewport size, item size, other factors, possibly still with a dial of some kind
   protected _overhang = 1000;
 
-  private _eventTarget: EventTarget | null = null;
+  // private _eventTarget: EventTarget | null = null;
 
-  private _layoutStateSink: LayoutStateSink;
+  private _hostSink: LayoutHostSink;
 
   protected get _defaultConfig(): C {
     return {
@@ -164,11 +164,8 @@ export abstract class BaseLayout<C extends BaseLayoutConfig> implements Layout {
     } as C;
   }
 
-  constructor(
-    config: C | undefined = undefined,
-    layoutStateSink: LayoutStateSink
-  ) {
-    this._layoutStateSink = layoutStateSink;
+  constructor(hostSink: LayoutHostSink, config?: C) {
+    this._hostSink = hostSink;
     // Delay setting config so that subclasses do setup work first
     Promise.resolve().then(() => (this.config = config || this._defaultConfig));
   }
@@ -285,33 +282,33 @@ export abstract class BaseLayout<C extends BaseLayoutConfig> implements Layout {
 
   unpin() {
     if (this._pin !== null) {
-      this._emitUnpinned();
+      this._sendUnpinnedMessage();
       this._pin = null;
     }
   }
 
-  async dispatchEvent(evt: Event) {
-    await this._eventTargetPromise;
-    this._eventTarget!.dispatchEvent(evt);
-  }
+  // async dispatchEvent(evt: Event) {
+  //   await this._eventTargetPromise;
+  //   this._eventTarget!.dispatchEvent(evt);
+  // }
 
-  async addEventListener(
-    type: string,
-    listener: EventListener | EventListenerObject | null,
-    options?: boolean | AddEventListenerOptions | undefined
-  ) {
-    await this._eventTargetPromise;
-    this._eventTarget!.addEventListener(type, listener, options);
-  }
+  // async addEventListener(
+  //   type: string,
+  //   listener: EventListener | EventListenerObject | null,
+  //   options?: boolean | AddEventListenerOptions | undefined
+  // ) {
+  //   await this._eventTargetPromise;
+  //   this._eventTarget!.addEventListener(type, listener, options);
+  // }
 
-  async removeEventListener(
-    type: string,
-    callback: EventListener | EventListenerObject | null,
-    options?: boolean | EventListenerOptions | undefined
-  ) {
-    await this._eventTargetPromise;
-    this._eventTarget!.removeEventListener(type, callback, options);
-  }
+  // async removeEventListener(
+  //   type: string,
+  //   callback: EventListener | EventListenerObject | null,
+  //   options?: boolean | EventListenerOptions | undefined
+  // ) {
+  //   await this._eventTargetPromise;
+  //   this._eventTarget!.removeEventListener(type, callback, options);
+  // }
 
   /**
    * Get the top and left positioning of the item at idx.
@@ -386,7 +383,7 @@ export abstract class BaseLayout<C extends BaseLayoutConfig> implements Layout {
     this._setPositionFromPin();
     this._getActiveItems();
     this._updateVisibleIndices();
-    this._emitState();
+    this._sendStateChangedMessage();
     // this._emitScrollSize();
     // this._emitRange();
     // this._emitChildPositions();
@@ -462,18 +459,21 @@ export abstract class BaseLayout<C extends BaseLayoutConfig> implements Layout {
     } as ScrollToOptions;
   }
 
-  private _emitUnpinned() {
-    this.dispatchEvent(new CustomEvent('unpinned'));
+  private _sendUnpinnedMessage() {
+    this._hostSink({
+      type: 'unpinned',
+    });
   }
 
-  protected _emitState() {
+  protected _sendStateChangedMessage() {
     const childPositions: ChildPositions = new Map();
     if (this._first !== -1 && this._last !== -1) {
       for (let idx = this._first; idx <= this._last; idx++) {
         childPositions.set(idx, this._getItemPosition(idx));
       }
     }
-    const detail: LayoutState = {
+    const message: StateChangedMessage = {
+      type: 'stateChanged',
       scrollSize: {
         [this._sizeDim]: this._scrollSize,
         [this._secondarySizeDim]: null,
@@ -487,14 +487,13 @@ export abstract class BaseLayout<C extends BaseLayoutConfig> implements Layout {
       childPositions,
     };
     if (this._scrollError) {
-      detail.scrollError = {
+      message.scrollError = {
         [this._positionDim]: this._scrollError,
         [this._secondaryPositionDim]: 0,
       } as Positions;
       this._scrollError = 0;
     }
-    // this.dispatchEvent(new CustomEvent('statechange', {detail}));
-    this._layoutStateSink(detail);
+    this._hostSink(message);
   }
 
   // protected _emitRange() {
@@ -600,7 +599,7 @@ export abstract class BaseLayout<C extends BaseLayoutConfig> implements Layout {
       this._lastVisible = lastVisible;
       if (options && options.emit) {
         // this._emitRange();
-        this._emitState();
+        this._sendStateChangedMessage();
       }
     }
   }

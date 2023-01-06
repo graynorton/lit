@@ -13,7 +13,7 @@ import {
 import {
   ChildMeasurements,
   ItemBox,
-  LayoutStateSink,
+  LayoutHostSink,
   MeasureChildFunction,
   Positions,
   Size,
@@ -25,8 +25,8 @@ interface FlexWrapLayoutConfig extends SizeGapPaddingBaseLayoutConfig {
 
 type FlexWrapLayoutSpecifier = FlexWrapLayoutConfig & {
   type: new (
-    config: FlexWrapLayoutConfig | undefined,
-    layoutStateSink: LayoutStateSink
+    hostSink: LayoutHostSink,
+    config?: FlexWrapLayoutConfig
   ) => FlexWrapLayout;
 };
 

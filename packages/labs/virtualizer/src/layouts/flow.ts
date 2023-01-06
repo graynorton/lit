@@ -15,7 +15,7 @@ import {
   offsetAxis,
   ChildMeasurements,
   BaseLayoutConfig,
-  LayoutStateSink,
+  LayoutHostSink,
 } from './shared/Layout.js';
 
 type ItemBounds = {
@@ -25,10 +25,7 @@ type ItemBounds = {
 
 type FlowLayoutConstructor = {
   prototype: FlowLayout;
-  new (
-    config: BaseLayoutConfig | undefined,
-    layoutStateSink: LayoutStateSink
-  ): FlowLayout;
+  new (hostSink: LayoutHostSink, config?: BaseLayoutConfig): FlowLayout;
 };
 
 type FlowLayoutSpecifier = BaseLayoutConfig & {

@@ -14,12 +14,13 @@ import {
   Layout,
   LayoutConstructor,
   LayoutSpecifier,
-  LayoutState,
+  StateChangedMessage,
   Size,
   InternalRange,
   MeasureChildFunction,
   ScrollToCoordinates,
   BaseLayoutConfig,
+  LayoutHostMessage,
 } from './layouts/shared/Layout.js';
 import {
   RangeChangedEvent,
@@ -397,8 +398,9 @@ export class Virtualizer {
         .FlowLayout as unknown as LayoutConstructor;
     }
 
-    this._layout = new Ctor(config, (state: LayoutState) =>
-      this._updateDOM(state)
+    this._layout = new Ctor(
+      (message: LayoutHostMessage) => this._handleLayoutMessage(message),
+      config
     );
 
     if (
@@ -415,11 +417,19 @@ export class Virtualizer {
     // this._layout.addEventListener('scrollerrorchange', this);
     // this._layout.addEventListener('itempositionchange', this);
     // this._layout.addEventListener('rangechange', this);
-    this._layout.addEventListener('unpinned', this);
+    // this._layout.addEventListener('unpinned', this);
     if (this._layout.listenForChildLoadEvents) {
       this._hostElement!.addEventListener('load', this._loadListener, true);
     }
     this._schedule(this._updateLayout);
+  }
+
+  _handleLayoutMessage(message: LayoutHostMessage) {
+    if (message.type === 'stateChanged') {
+      this._updateDOM(message);
+    } else if (message.type === 'unpinned') {
+      this._hostElement!.dispatchEvent(new UnpinnedEvent());
+    }
   }
 
   // TODO (graynorton): Rework benchmarking so that it has no API and
@@ -484,7 +494,7 @@ export class Virtualizer {
     }
   }
 
-  async _updateDOM(state: LayoutState) {
+  async _updateDOM(state: StateChangedMessage) {
     this._scrollSize = state.scrollSize;
     this._adjustRange(state.range);
     this._childrenPos = state.childPositions;

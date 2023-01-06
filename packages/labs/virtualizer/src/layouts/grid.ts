@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-import {LayoutStateSink, Positions, Size} from './shared/Layout.js';
+import {LayoutHostSink, Positions, Size} from './shared/Layout.js';
 import {dim1, dim2} from './shared/BaseLayout.js';
 import {GridBaseLayout, GridBaseLayoutConfig} from './shared/GridBaseLayout.js';
 
 type GridLayoutSpecifier = GridBaseLayoutConfig & {
   type: new (
-    config: GridBaseLayoutConfig | undefined,
-    layoutStateSink: LayoutStateSink
+    hostSink: LayoutHostSink,
+    config?: GridBaseLayoutConfig
   ) => GridLayout;
 };
 
