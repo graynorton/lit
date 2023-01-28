@@ -242,9 +242,8 @@ export abstract class BaseLayout<C extends BaseLayoutConfig> implements Layout {
     this._scrollPosition = this._latestCoords[this._positionDim];
     const change = Math.abs(oldPos - this._scrollPosition);
     if (change >= 1) {
-      this._updateVisibleIndices({emit: true});
+      this._checkThresholds();
     }
-    this._checkThresholds();
   }
 
   /**
@@ -438,6 +437,14 @@ export abstract class BaseLayout<C extends BaseLayoutConfig> implements Layout {
     });
   }
 
+  private _sendVisibilityChangedMessage() {
+    this._hostSink({
+      type: 'visibilityChanged',
+      firstVisible: this._firstVisible,
+      lastVisible: this._lastVisible,
+    });
+  }
+
   protected _sendStateChangedMessage() {
     const childPositions: ChildPositions = new Map();
     if (this._first !== -1 && this._last !== -1) {
@@ -490,6 +497,8 @@ export abstract class BaseLayout<C extends BaseLayoutConfig> implements Layout {
       );
       if (this._physicalMin > min || this._physicalMax < max) {
         this._scheduleReflow();
+      } else {
+        this._updateVisibleIndices({emit: true});
       }
     }
   }
@@ -528,7 +537,7 @@ export abstract class BaseLayout<C extends BaseLayoutConfig> implements Layout {
       this._firstVisible = firstVisible;
       this._lastVisible = lastVisible;
       if (options && options.emit) {
-        this._sendStateChangedMessage();
+        this._sendVisibilityChangedMessage();
       }
     }
   }
